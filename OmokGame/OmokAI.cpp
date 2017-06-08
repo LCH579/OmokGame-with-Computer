@@ -1,8 +1,7 @@
-#include<stdio.h>
 #include<stdlib.h>
-#include<Windows.h>
 #include<time.h>
-#include<conio.h>
+
+//Update : 17.06.08 18:30
 
 #define BOARD_SIZE 19
 #define WHITE 1
@@ -13,9 +12,11 @@ int AI_init(int, int[]);
 void continueousScore(int[][BOARD_SIZE], int[][BOARD_SIZE]);
 void extractBoard(int[][BOARD_SIZE], int, int[][BOARD_SIZE]);
 void sumArray(int[][BOARD_SIZE], int[][BOARD_SIZE], int[][BOARD_SIZE]);
+int getAbsPosition(int[][BOARD_SIZE], int[], int[][BOARD_SIZE], int[][BOARD_SIZE]);
 void filterDisable(int[][BOARD_SIZE]);
 int getBestPosition(int[][BOARD_SIZE], int[][BOARD_SIZE], int[][BOARD_SIZE], int[]);
-int getAbsPosition(int[][BOARD_SIZE], int[]);
+int getAbsPosition(int[][BOARD_SIZE], int[], int[][BOARD_SIZE], int[][BOARD_SIZE], int, int);
+int checkSameModel(int[][BOARD_SIZE], int[][BOARD_SIZE], int[], int[], int[], int);
 extern int checkFiveInRange(int[]);
 extern int checkFive(int[]);
 extern int now_board[][BOARD_SIZE];
@@ -37,28 +38,6 @@ extern int now_board[][BOARD_SIZE];
 
 /*
 //This methods are for debugging
-int now_board_temp[BOARD_SIZE][BOARD_SIZE] = {
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
-
 void printArray(int arr[][BOARD_SIZE]);
 int main() {
 	system("mode con: cols=100 lines=41");
@@ -93,12 +72,6 @@ void printLargerArray(int arr[][BOARD_SIZE + 2]) {
 
 int AI_init(int color, int bestPosition[]) {
 	
-	//STEP 1
-	if (getAbsPosition(now_board, bestPosition)) {
-		return 1;
-	}
-
-	//STEP 2
 	int def_board[BOARD_SIZE][BOARD_SIZE] = { 0 };
 	int atk_board[BOARD_SIZE][BOARD_SIZE] = { 0 };
 
@@ -117,9 +90,14 @@ int AI_init(int color, int bestPosition[]) {
 	extractBoard(now_board, com_color, atk_board);
 	extractBoard(now_board, play_color, def_board);
 
+	//STEP 1
+	if (getAbsPosition(now_board, bestPosition, atk_board, def_board, com_color, play_color)) {
+		return 1;
+	}
 	continueousScore(atk_board, atk_score_board);
 	continueousScore(def_board, def_score_board);
 
+	//STEP 2
 	int score_sum[BOARD_SIZE][BOARD_SIZE] = { 0 };
 	sumArray(atk_score_board, def_score_board, score_sum);
 	filterDisable(score_sum);
@@ -133,23 +111,24 @@ int getRandomInt(int range) {
 	return (rand() % range + 1);
 }
 
-int getAbsPosition(int board[][BOARD_SIZE], int position[2]) {
+int getAbsPosition(int board[][BOARD_SIZE], int position[2], int atk_board[][BOARD_SIZE], int def_board[][BOARD_SIZE], int com_color, int play_color) {
+	//Check Five (Now not working! Must fixed)
 	for (int i = 0; i < BOARD_SIZE; i++) {
 		for (int j = 0; j < BOARD_SIZE; j++) {
 			if (board[i][j] == 0) {
 				board[i][j] = WHITE;
-				int positionTemp[2] = { i, j };
+  				int positionTemp[2] = { j, i };
 				if (checkFiveInRange(positionTemp)) {
-					position[1] = positionTemp[0];
-					position[0] = positionTemp[1];
+					position[0] = positionTemp[0];
+					position[1] = positionTemp[1];
 					board[i][j] = 0;
 					return 1;
 				}
 
 				board[i][j] = BLACK;
 				if (checkFiveInRange(positionTemp)) {
-					position[1] = positionTemp[0];
-					position[0] = positionTemp[1];
+					position[0] = positionTemp[0];
+					position[1] = positionTemp[1];
 					board[i][j] = 0;
 					return 1;
 				}
@@ -157,6 +136,232 @@ int getAbsPosition(int board[][BOARD_SIZE], int position[2]) {
 			}
 		}
 	 }
+
+	//Check Four (2 + 1 or 1 + 2)
+	int modelA[6] = {0, 1, 1, 0, 1, 0};
+	int empty_position[2] = { 18, 18 };
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		for (int j = 0; j < BOARD_SIZE; j++) {
+			if (atk_board[i][j] == 0) {
+				int positionTemp[2] = { i, j };
+				int sameCode = checkSameModel(atk_board, def_board, positionTemp, modelA, empty_position, sizeof(modelA) / sizeof(int));
+				if (sameCode) {
+					if (board[empty_position[1]][empty_position[0]] == 0) {
+						position[0] = empty_position[0];
+						position[1] = empty_position[1];
+						return 1;
+					}
+				}
+			}
+			if (def_board[i][j] == 0) {
+				int positionTemp[2] = { i, j };
+				int sameCode = checkSameModel(def_board, atk_board, positionTemp, modelA, empty_position, sizeof(modelA) / sizeof(int));
+				if (sameCode) {
+					if (board[empty_position[1]][empty_position[0]] == 0) {
+						position[0] = empty_position[0];
+						position[1] = empty_position[1];
+						return 1;
+					}
+				}
+			}
+		}
+	}
+
+	//Check Alone Three
+	int modelB[5] = { 0, 1, 1, 1, 0 };
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		for (int j = 0; j < BOARD_SIZE; j++) {
+			if (atk_board[i][j] == 0) {
+				int positionTemp[2] = { i, j };
+				int sameCode = checkSameModel(atk_board, def_board, positionTemp, modelB, empty_position, sizeof(modelB) / sizeof(int));
+				if (sameCode) {
+					if (board[empty_position[1]][empty_position[0]] == 0) {
+						position[1] = i;
+						position[0] = j;
+						return 1;
+					}
+				}
+			}
+			if (def_board[i][j] == 0) {
+				int positionTemp[2] = { i, j };
+				int sameCode = checkSameModel(def_board, atk_board, positionTemp, modelB, empty_position, sizeof(modelB) / sizeof(int));
+				if (sameCode) {
+					if (board[empty_position[1]][empty_position[0]] == 0) {
+						position[1] = i;
+						position[0] = j;
+						return 1;
+					}
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+int checkSameModel(int target_board[][BOARD_SIZE], int opposite_board[][BOARD_SIZE], int position[], int model[], int empty_pos[], int size) {
+	//Return 1 : Horizon 2 : Verical 3 : SOUTH EAST 4 : SOUTH WEST
+	//1
+	int cnt = 0;
+	for (int i = 0; i < size; i++) {
+		if (position[1] + i < BOARD_SIZE) {
+			if (target_board[position[0]][position[1] + i] == model[i]) {
+				if (i != 0 && i != (size - 1) && model[i] == 0) {
+					empty_pos[1] = position[0];
+					empty_pos[0] = position[1] + i;
+				}
+				cnt++;
+			} else {
+				break;
+			}
+		} else {
+			break;
+		}
+	}
+	if (cnt == size && (opposite_board[position[0]][position[1]] == 0 && opposite_board[position[0]][position[1] + (size - 1)] == 0)) {
+		return 1;
+	}
+
+	cnt = 0;
+	for (int i = 0; i < size; i++) {
+		if (position[1] + i < BOARD_SIZE) {
+			if (target_board[position[0]][position[1] + i] == model[(size - 1) - i]) {
+				if (i != 0 && i != (size - 1) && model[(size - 1) - i] == 0) {
+					empty_pos[1] = position[0];
+					empty_pos[0] = position[1] + i;
+				}
+				cnt++;
+			} else {
+				break;
+			}
+		} else {
+			break;
+		}
+	}
+	if (cnt == size && (opposite_board[position[0]][position[1]] == 0 && opposite_board[position[0]][position[1] + (size - 1)] == 0)) {
+		return 1;
+	}
+	//2
+	cnt = 0;
+	for (int i = 0; i < size; i++) {
+		if (position[0] + i < BOARD_SIZE) {
+			if (target_board[position[0] + i][position[1]] == model[i]) {
+				if (i != 0 && i != (size - 1) && model[i] == 0) {
+					empty_pos[1] = position[0] + i;
+					empty_pos[0] = position[1];
+				}
+				cnt++;
+			} else {
+				break;
+			}
+		} else {
+			break;
+		}
+	}
+	if (cnt == size && (opposite_board[position[0]][position[1]] == 0 && opposite_board[position[0] + (size - 1)][position[1]] == 0)) {
+		return 2;
+	}
+	cnt = 0;
+	for (int i = 0; i < size; i++) {
+		if (position[0] + i < BOARD_SIZE) {
+			if (target_board[position[0] + i][position[1]] == model[size - 1 - i]) {
+				if (i != 0 && i != (size - 1) && model[(size - 1) - i] == 0) {
+					empty_pos[1] = position[0] + i;
+					empty_pos[0] = position[1];
+				}
+				cnt++;
+			} else {
+				break;
+			}
+		} else {
+			break;
+		}
+	}
+	if (cnt == size && (opposite_board[position[0]][position[1]] == 0 && opposite_board[position[0] + (size - 1)][position[1]] == 0)) {
+		return 2;
+	}
+
+	//3
+	cnt = 0;
+	for (int i = 0; i < size; i++) {
+		if (position[0] + i < BOARD_SIZE && position[1] + i < BOARD_SIZE) {
+			if (target_board[position[0] + i][position[1] + i] == model[i]) {
+				if (i != 0 && i != (size - 1) && model[i] == 0) {
+					empty_pos[1] = position[0] + i;
+					empty_pos[0] = position[1] + i;
+				}
+				cnt++;
+			} else {
+				break;
+			}
+		} else {
+			break;
+		}
+	}
+	if (cnt == size && (opposite_board[position[0]][position[1]] == 0 && opposite_board[position[0] + (size - 1)][position[1] + (size - 1)] == 0)) {
+		return 3;
+	}
+
+	cnt = 0;
+	for (int i = 0; i < size; i++) {
+		if (position[0] + i < BOARD_SIZE && position[1] + i < BOARD_SIZE) {
+			if (target_board[position[0] + i][position[1] + i] == model[size - 1 - i]) {
+				if (i != 0 && i != (size - 1) && model[(size - 1) - i] == 0) {
+					empty_pos[1] = position[0] + i;
+					empty_pos[0] = position[1] + i;
+				}
+				cnt++;
+			} else {
+				break;
+			}
+		} else {
+			break;
+		}
+	}
+	if (cnt == size && (opposite_board[position[0]][position[1]] == 0 && opposite_board[position[0] + (size - 1)][position[1] + (size - 1)] == 0)) {
+		return 3;
+	}
+
+	//4
+	cnt = 0;
+	for (int i = 0; i < size; i++) {
+		if (position[0] + i < BOARD_SIZE && position[1] - i > -1) {
+			if (target_board[position[0] + i][position[1] - i] == model[i]) {
+				if (i != 0 && i != (size - 1) && model[i] == 0) {
+					empty_pos[1] = position[0] + i;
+					empty_pos[0] = position[1] - i;
+				}
+				cnt++;
+			} else {
+				break;
+			}
+		} else {
+			break;
+		}
+	}
+	if (cnt == size && (opposite_board[position[0]][position[1]] == 0 && opposite_board[position[0] + (size - 1)][position[1] - (size - 1)] == 0)) {
+		return 4;
+	}
+
+	cnt = 0;
+	for (int i = 0; i < size; i++) {
+		if (position[0] + i < BOARD_SIZE && position[1] - i > -1) {
+			if (target_board[position[0] + i][position[1] - i] == model[size - 1 - i]) {
+				if (i != 0 && i != (size - 1) && model[(size - 1) - i] == 0) {
+					empty_pos[1] = position[0] + i;
+					empty_pos[0] = position[1] - i;
+				}
+				cnt++;
+			} else {
+				break;
+			}
+		} else {
+			break;
+		}
+	}
+	if (cnt == size && (opposite_board[position[0]][position[1]] == 0 && opposite_board[position[0] + (size - 1)][position[1] - (size - 1)] == 0)) {
+		return 4;
+	}
+
 	return 0;
 }
 
@@ -178,7 +383,7 @@ int getBestPosition(int score_arr[][BOARD_SIZE], int atk_score_board[][BOARD_SIZ
 		}
 	}
 	if (cntA == 1) {
-	
+		
 		position[1] = position_stamp[0][0];
 		position[0] = position_stamp[0][1];
 		return 1;
@@ -217,7 +422,7 @@ int getBestPosition(int score_arr[][BOARD_SIZE], int atk_score_board[][BOARD_SIZ
 			position_stamp[cntC - 1][0] = position_stamp[i][0];
 			position_stamp[cntC - 1][1] = position_stamp[i][1];
 		}
-		else if (score_arr[position_stamp[i][0]][position_stamp[i][1]] = score_arr[position_stamp[i][0]][position_stamp[i][1]] + atk_score_board[position_stamp[i][0]][position_stamp[i][1]] == max) {
+		else if (score_arr[position_stamp[i][0]][position_stamp[i][1]] == max) {
 			cntC++;
 			position_stamp[cntC - 1][0] = position_stamp[i][0];
 			position_stamp[cntC - 1][1] = position_stamp[i][1];
@@ -290,8 +495,7 @@ void continueousScore(int board[][BOARD_SIZE], int return_board[][BOARD_SIZE]) {
 					k++;
 					if (boardTemp[j][i + k] == 1) {
 						cnt_plus++;
-					}
-					else {
+					} else {
 						break;
 					}
 				}
@@ -300,8 +504,7 @@ void continueousScore(int board[][BOARD_SIZE], int return_board[][BOARD_SIZE]) {
 					k--;
 					if (boardTemp[j][i + k] == 1) {
 						cnt_minus++;
-					}
-					else {
+					} else {
 						break;
 					}
 				}
@@ -320,8 +523,7 @@ void continueousScore(int board[][BOARD_SIZE], int return_board[][BOARD_SIZE]) {
 					k++;
 					if (boardTemp[j + k][i] == 1) {
 						cnt_plus++;
-					}
-					else {
+					} else {
 						break;
 					}
 				}
@@ -330,8 +532,7 @@ void continueousScore(int board[][BOARD_SIZE], int return_board[][BOARD_SIZE]) {
 					k--;
 					if (boardTemp[j + k][i] == 1) {
 						cnt_minus++;
-					}
-					else {
+					} else {
 						break;
 					}
 				}
@@ -349,8 +550,7 @@ void continueousScore(int board[][BOARD_SIZE], int return_board[][BOARD_SIZE]) {
 					k++;
 					if (boardTemp[j + k][i + k] == 1) {
 						cnt_plus++;
-					}
-					else {
+					} else {
 						break;
 					}
 				}
@@ -359,8 +559,7 @@ void continueousScore(int board[][BOARD_SIZE], int return_board[][BOARD_SIZE]) {
 					k--;
 					if (boardTemp[j + k][i + k] == 1) {
 						cnt_minus++;
-					}
-					else {
+					} else {
 						break;
 					}
 				}
@@ -378,8 +577,7 @@ void continueousScore(int board[][BOARD_SIZE], int return_board[][BOARD_SIZE]) {
 					k++;
 					if (boardTemp[j + k][i - k] == 1) {
 						cnt_plus++;
-					}
-					else {
+					} else {
 						break;
 					}
 				}
@@ -388,8 +586,7 @@ void continueousScore(int board[][BOARD_SIZE], int return_board[][BOARD_SIZE]) {
 					k--;
 					if (boardTemp[j + k][i - k] == 1) {
 						cnt_minus++;
-					}
-					else {
+					} else {
 						break;
 					}
 				}

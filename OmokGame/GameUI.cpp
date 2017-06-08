@@ -6,7 +6,7 @@
 #define WHITE 1
 #define BLACK 2
 
-int now_position[2] = { 0, 0 };
+int now_position[2] = { 8, 8 };
 extern int now_board[][BOARD_SIZE];
 extern int gameStatus;
 extern int gameTurn;
@@ -23,10 +23,7 @@ int main() {
 	while (1) {
 		if (kbhit()) {key_pressed();} // Key Input Check
 		moveCursor(0, 0);
-		printf("%d", gameStatus);
 	}
-
-
 }
 
 void key_pressed() {
@@ -36,12 +33,18 @@ void key_pressed() {
 	switch (key) {
 		case 13:
 			//printf("ENTER");
-			if (setStone(now_position, gameTurn)) {
-				int ai_position[2] = { 0, 0 };
-				AI_init(gameTurn, ai_position);
-				setStone(ai_position, gameTurn);
+			if (gameStatus == 0) {
+				if (setStone(now_position, gameTurn)) {
+
+					if (gameStatus == 0) {
+						int ai_position[2] = { 0, 0 };
+
+						AI_init(gameTurn, ai_position);
+						while (setStone(ai_position, gameTurn));
+
+					}
+				}
 			}
-			
 			break;
 		case 72:
 			//printf("UP");
@@ -124,9 +127,15 @@ void DrawScreen(int board[][BOARD_SIZE]) {
 	moveCursor(42, 15);
 	printf("OMOK GAME");
 	moveCursor(42, 18);
-	printf("POSTION");
+	printf("POSITION");
 	moveCursor(43, 20);
-	
-	//printf("%c%d", now_position[0] + 'A', now_position[1] + 1);
-	printf("%d %d", now_position[0], now_position[1]);
+	printf("%c%d", now_position[0] + 'A', now_position[1] + 1);
+	moveCursor(42, 24);
+	if (gameStatus) {
+		if (gameStatus == 1) {
+			printf("WHITE WIN!");
+		} else {
+			printf("BLACK WIN!");
+		}
+	}
 }
