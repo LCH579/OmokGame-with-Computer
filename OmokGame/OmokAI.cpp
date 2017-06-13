@@ -1,7 +1,7 @@
 #include<stdlib.h>
 #include<time.h>
 
-//Update : 17.06.08 18:30
+//Update : 17.06.14 00:37
 
 #define BOARD_SIZE 19
 #define WHITE 1
@@ -112,7 +112,7 @@ int getRandomInt(int range) {
 }
 
 int getAbsPosition(int board[][BOARD_SIZE], int position[2], int atk_board[][BOARD_SIZE], int def_board[][BOARD_SIZE], int com_color, int play_color) {
-	//Check Five (Now not working! Must fixed)
+	//Check Five
 	for (int i = 0; i < BOARD_SIZE; i++) {
 		for (int j = 0; j < BOARD_SIZE; j++) {
 			if (board[i][j] == 0) {
@@ -153,6 +153,10 @@ int getAbsPosition(int board[][BOARD_SIZE], int position[2], int atk_board[][BOA
 					}
 				}
 			}
+		}
+	}
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		for (int j = 0; j < BOARD_SIZE; j++) {
 			if (def_board[i][j] == 0) {
 				int positionTemp[2] = { i, j };
 				int sameCode = checkSameModel(def_board, atk_board, positionTemp, modelA, empty_position, sizeof(modelA) / sizeof(int));
@@ -166,7 +170,6 @@ int getAbsPosition(int board[][BOARD_SIZE], int position[2], int atk_board[][BOA
 			}
 		}
 	}
-
 	//Check Alone Three
 	int modelB[5] = { 0, 1, 1, 1, 0 };
 	for (int i = 0; i < BOARD_SIZE; i++) {
@@ -182,6 +185,10 @@ int getAbsPosition(int board[][BOARD_SIZE], int position[2], int atk_board[][BOA
 					}
 				}
 			}
+		}
+	}
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		for (int j = 0; j < BOARD_SIZE; j++) {
 			if (def_board[i][j] == 0) {
 				int positionTemp[2] = { i, j };
 				int sameCode = checkSameModel(def_board, atk_board, positionTemp, modelB, empty_position, sizeof(modelB) / sizeof(int));

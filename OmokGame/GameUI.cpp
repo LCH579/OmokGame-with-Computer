@@ -19,26 +19,23 @@ extern int setStone(int[], int);
 
 int main() {
 	system("mode con: cols=100 lines=41");
- 	DrawScreen(now_board);
+	DrawScreen(now_board);
 	while (1) {
 		if (kbhit()) {key_pressed();} // Key Input Check
 		moveCursor(0, 0);
+
 	}
 }
 
 void key_pressed() {
 	int key = getch();
-	printf("        ");
-	moveCursor(0, 0);
 	switch (key) {
 		case 13:
 			//printf("ENTER");
 			if (gameStatus == 0) {
 				if (setStone(now_position, gameTurn)) {
-
 					if (gameStatus == 0) {
 						int ai_position[2] = { 0, 0 };
-
 						AI_init(gameTurn, ai_position);
 						while (setStone(ai_position, gameTurn));
 
