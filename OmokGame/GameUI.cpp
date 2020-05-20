@@ -14,7 +14,7 @@ extern int AI_init(int, int[]);
 void key_pressed();
 void DrawScreen(int x[][BOARD_SIZE]);
 void moveCursor(int, int);
-//void move_position(int);
+void move_position(int);
 extern int setStone(int[], int);
 
 int main() {
