@@ -1,7 +1,7 @@
 #include<stdlib.h>
 #include<time.h>
 
-//Update : 17.06.14 00:37
+Update : 17.06.14 00:37
 
 #define BOARD_SIZE 19
 #define WHITE 1
