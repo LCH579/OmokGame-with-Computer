@@ -1,6 +1,6 @@
 #define BOARD_SIZE 19
 #define WHITE 1
-#define BLACK 2
+//#define BLACK 2
 
 //int now_board[BOARD_SIZE][BOARD_SIZE] = { 0 };
 int now_board[BOARD_SIZE][BOARD_SIZE] = {
